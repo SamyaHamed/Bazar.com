@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  catalog:
+    build: ./Catalog_Service
+    container_name: bazar_catalog
+    ports:
+      - "5142:5142" 
+    environment:
+      - ASPNETCORE_URLS=http://+:5142
+      - DOTNET_RUNNING_IN_CONTAINER=true
+      - SQLITE_DB_PATH=/app/Data/bazar.db
+    volumes:
+      - ./Catalog_Service/Data:/app/Data
+    restart: unless-stopped
+
+  order:
+    build: ./Order
+    container_name: bazar_order
+    ports:
+      - "3002:3002"
+    environment:
+      - CATALOG_URL=http://catalog:5142   
+    depends_on:
+      - catalog
+    volumes:
+      - ./Order/data:/app/data
+    restart: unless-stopped
+
+  front:
+    build: ./front
+    container_name: bazar_front
+    ports:
+      - "3000:3000"
+    environment:
+      - CATALOG_URL=http://catalog:5142   
+      - ORDER_URL=http://order:3002       
+    depends_on:
+      - order
+      - catalog
+    restart: unless-stopped
